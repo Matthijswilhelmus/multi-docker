@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t andromedaswarm/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run andromedaswarm/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t andromedaswarm/multi-client ./client
+  - docker build -t andromedaswarm/multi-nginx ./nginx 
+  - docker build -t andromedaswarm/multi-server ./server
+  - docker build -t andromedaswarm/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push andromedaswarm/multi-client
+  - docker push andromedaswarm/multi-nginx
+  - docker push andromedaswarm/multi-server
+  - docker push andromedaswarm/multi-worker     
